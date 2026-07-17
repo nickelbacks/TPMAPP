@@ -2,21 +2,17 @@ import React, { useEffect } from 'react';
 import {
   machineStatus, lastRecord, userById, nokList, fmtDate, fmtDT, initials, DAY,
 } from '../db.js';
+import { useLang } from '../i18n.jsx';
 import {
   TrendingUp, AlertTriangle, Clock, CheckCircle, ChevronRight
 } from 'lucide-react';
 
-const ST = {
-  done: { cls: 'badge-done', label: 'TPM faite' },
-  due: { cls: 'badge-due', label: 'À faire' },
-  late: { cls: 'badge-late', label: 'En retard' },
-};
-
 export default function Dashboard({ DB, go }) {
+  const { t, lang } = useLang();
+
   useEffect(() => {
-    document.getElementById('page-title').textContent = 'Dashboard';
-    document.getElementById('page-crumb') && (document.getElementById('page-crumb').textContent = "Vue d'ensemble de la maintenance premier niveau");
-  }, []);
+    document.getElementById('page-title').textContent = t.dash_title;
+  }, [t]);
 
   const total = DB.machines.length;
   const done = DB.machines.filter(m => machineStatus(DB, m) === 'done').length;
@@ -25,7 +21,6 @@ export default function Dashboard({ DB, go }) {
   const noks = nokList(DB, 7);
   const todayCount = DB.records.filter(r => new Date(r.date).toDateString() === new Date().toDateString()).length;
 
-  // Chart data
   let maxC = 1;
   const counts = [];
   for (let i = 6; i >= 0; i--) {
@@ -42,6 +37,12 @@ export default function Dashboard({ DB, go }) {
     return { m, u, nok, date: r.date };
   });
 
+  const ST = {
+    done: { cls: 'badge-done', label: t.badge_done },
+    due: { cls: 'badge-due', label: t.badge_due },
+    late: { cls: 'badge-late', label: t.badge_late },
+  };
+
   return (
     <div className="dashboard">
       <div className="kpi-grid">
@@ -51,7 +52,7 @@ export default function Dashboard({ DB, go }) {
           </div>
           <div>
             <div className="kpi-value">{rate}%</div>
-            <div className="kpi-label">Taux de réalisation TPM</div>
+            <div className="kpi-label">{t.dash_kpi_rate}</div>
           </div>
         </div>
         <div className="card kpi-card">
@@ -60,7 +61,7 @@ export default function Dashboard({ DB, go }) {
           </div>
           <div>
             <div className="kpi-value">{noks.length}</div>
-            <div className="kpi-label">Anomalies (7 jours)</div>
+            <div className="kpi-label">{t.dash_kpi_anomalies}</div>
           </div>
         </div>
         <div className="card kpi-card">
@@ -69,7 +70,7 @@ export default function Dashboard({ DB, go }) {
           </div>
           <div>
             <div className="kpi-value">{late.length}</div>
-            <div className="kpi-label">Machines en retard</div>
+            <div className="kpi-label">{t.dash_kpi_late}</div>
           </div>
         </div>
         <div className="card kpi-card">
@@ -78,20 +79,19 @@ export default function Dashboard({ DB, go }) {
           </div>
           <div>
             <div className="kpi-value">{todayCount}</div>
-            <div className="kpi-label">TPM aujourd'hui</div>
+            <div className="kpi-label">{t.dash_kpi_today}</div>
           </div>
         </div>
       </div>
 
       <div className="grid-2col">
         <div className="col-stack">
-          {/* Chart */}
           <div className="card">
-            <h3>TPM réalisées — 7 derniers jours</h3>
+            <h3>{t.dash_chart_title}</h3>
             <div className="chart">
               {counts.map(({ d, c }, idx) => {
                 const hgt = Math.max(8, Math.round(c / maxC * 120));
-                const day = d.toLocaleDateString('fr-FR', { weekday: 'short' });
+                const day = d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' });
                 return (
                   <div key={idx} className="chart-col">
                     <div className={`chart-bar ${idx === 6 ? 'hot' : ''}`} style={{ height: hgt + 'px' }}>
@@ -104,10 +104,9 @@ export default function Dashboard({ DB, go }) {
             </div>
           </div>
 
-          {/* Machines en retard */}
           <div className="card">
-            <h3>Machines en retard</h3>
-            {late.length === 0 && <div className="empty">Aucune machine en retard</div>}
+            <h3>{t.dash_late_title}</h3>
+            {late.length === 0 && <div className="empty">{t.dash_late_empty}</div>}
             {late.map(m => {
               const p = DB.postes.find(x => x.id === m.posteId);
               const lr = lastRecord(DB, m.id);
@@ -115,28 +114,27 @@ export default function Dashboard({ DB, go }) {
                 <div key={m.id} className="alert-row alert-red" onClick={() => go('machine', m.id)}>
                   <div className="alert-main">
                     <strong>{m.name}</strong>
-                    <div className="alert-sub">{p ? p.name : ''} — {lr ? 'dernière TPM le ' + fmtDate(lr.date) : 'aucune TPM enregistrée'}</div>
+                    <div className="alert-sub">{p ? p.name : ''} — {lr ? t.dash_late_last + fmtDate(lr.date) : t.dash_late_none}</div>
                   </div>
-                  <span className="badge badge-late">En retard</span>
+                  <span className="badge badge-late">{t.badge_late}</span>
                   <ChevronRight size={16} color="var(--muted)" />
                 </div>
               );
             })}
           </div>
 
-          {/* Anomalies */}
           <div className="card">
-            <h3>Anomalies signalées (7 jours)</h3>
-            {noks.length === 0 && <div className="empty">Aucune anomalie sur 7 jours</div>}
+            <h3>{t.dash_anomaly_title}</h3>
+            {noks.length === 0 && <div className="empty">{t.dash_anomaly_empty}</div>}
             {noks.slice(0, 6).map((n, i) => (
               <div key={i} className="alert-row alert-orange">
                 <div className="alert-main">
                   <strong>{n.task}</strong> — {n.machine.name}
                   {n.comment && <div className="alert-sub">« {n.comment} »</div>}
-                  <div className="alert-sub">{fmtDT(n.date)} par {n.user.name}</div>
+                  <div className="alert-sub">{fmtDT(n.date)}{t.dash_anomaly_par}{n.user.name}</div>
                 </div>
                 {n.photo && (
-                  <img src={n.photo} className="tl-photo-small" alt="" onClick={(e) => { e.stopPropagation(); }} />
+                  <img src={n.photo} className="tl-photo-small" alt="" onClick={(e) => e.stopPropagation()} />
                 )}
               </div>
             ))}
@@ -144,13 +142,13 @@ export default function Dashboard({ DB, go }) {
         </div>
 
         <div className="card">
-          <h3>Activité récente</h3>
-          {acts.length === 0 && <div className="empty">Aucune activité.</div>}
+          <h3>{t.dash_activity_title}</h3>
+          {acts.length === 0 && <div className="empty">{t.dash_activity_empty}</div>}
           {acts.map((a, i) => (
             <div key={i} className="act-row">
               <div className="avatar avatar-sm">{initials(a.u.name)}</div>
               <div className="act-txt">
-                <span><strong>{a.u.name}</strong> a réalisé la TPM de <strong>{a.m ? a.m.name : '?'}</strong></span>
+                <span><strong>{a.u.name}</strong> {t.dash_activity_tpm} <strong>{a.m ? a.m.name : '?'}</strong></span>
                 {' '}
                 {a.nok
                   ? <span className="badge badge-nok">{a.nok} NOK</span>

@@ -6,6 +6,7 @@ import {
 } from './db.js';
 import './config.js';
 import { initAnalytics, track as trk } from './analytics.js';
+import { useLang } from './i18n.jsx';
 import Login from './components/Login.jsx';
 import Layout from './components/Layout.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -17,6 +18,7 @@ import Modal from './components/Modal.jsx';
 import TpmChecklist from './components/TpmChecklist.jsx';
 
 export default function App() {
+  const { t } = useLang();
   const [DB, setDB] = useState(() => { const d = loadDB(); initIdc(d); return d; });
   const [currentUser, setCurrentUser] = useState(null);
   const [route, setRoute] = useState({ name: 'dashboard' });
@@ -49,13 +51,13 @@ export default function App() {
 
   const login = useCallback((userId, pwd) => {
     const u = DB.users.find(x => x.id === userId);
-    if (!u || u.pwd !== pwd) return { error: "Mot de passe incorrect." };
+    if (!u || u.pwd !== pwd) return { error: t.login_error };
     setCurrentUser(u);
     trk("login", { role: u.role });
     try { sessionStorage.setItem("tpmDemoUser", String(u.id)); } catch (e) {}
     setRoute({ name: u.role === "operateur" ? "postes" : "dashboard" });
     return { ok: true };
-  }, [DB]);
+  }, [DB, t]);
 
   const logout = useCallback(() => {
     setCurrentUser(null);
@@ -64,20 +66,20 @@ export default function App() {
   }, []);
 
   const resetDemo = useCallback(() => {
-    if (!confirm("Réinitialiser la démo ? Toutes tes modifications locales seront effacées.")) return;
+    if (!confirm(t.params_reset_confirm)) return;
     try { localStorage.removeItem("tpmDemo"); } catch (e) {}
     const d = seed(); initIdc(d);
     setDB(d);
     setCurrentUser(null);
     try { sessionStorage.removeItem("tpmDemoUser"); } catch (e) {}
-  }, []);
+  }, [t]);
 
   const openModal = useCallback((content) => setModalContent(content), []);
   const closeModal = useCallback(() => { setModalContent(null); }, []);
 
   const showTpmChecklist = useCallback((machineId) => {
     const m = DB.machines.find(x => x.id === machineId);
-    if (!m || !m.checklist.length) { alert("Pas de checklist. Ajoutez des tâches dans les paramètres."); return; }
+    if (!m || !m.checklist.length) { alert("No checklist. Add tasks in settings."); return; }
     openModal(
       <TpmChecklist
         machine={m}

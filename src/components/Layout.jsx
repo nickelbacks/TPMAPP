@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { ROLES, initials } from '../db.js';
+import { useLang } from '../i18n.jsx';
 import {
   LayoutDashboard, Factory, Settings, LogOut, Menu, X, Shield
 } from 'lucide-react';
 
-const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'chef'] },
-  { key: 'postes', label: 'Postes de travail', icon: Factory, roles: ['admin', 'chef', 'operateur'] },
-  { key: 'params', label: 'Paramètres', icon: Settings, roles: ['admin'] },
-];
-
 export default function Layout({ currentUser, activePage, go, logout, children }) {
+  const { t } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const NAV_ITEMS = [
+    { key: 'dashboard', label: t.nav_dashboard, icon: LayoutDashboard, roles: ['admin', 'chef'] },
+    { key: 'postes', label: t.nav_postes, icon: Factory, roles: ['admin', 'chef', 'operateur'] },
+    { key: 'params', label: t.nav_params, icon: Settings, roles: ['admin'] },
+  ];
 
   const items = NAV_ITEMS.filter(i => i.roles.includes(currentUser.role));
 
@@ -24,7 +26,7 @@ export default function Layout({ currentUser, activePage, go, logout, children }
           </div>
           <div>
             <span className="sidebar-logo-text">TPM<span className="dot-green">.</span></span>
-            <div className="sidebar-logo-sub">VERSION DÉMO</div>
+            <div className="sidebar-logo-sub">{t.layout_demo_badge}</div>
           </div>
         </div>
       </div>
@@ -46,7 +48,7 @@ export default function Layout({ currentUser, activePage, go, logout, children }
       <div className="sidebar-spacer" />
       <button className="nav-item logout" onClick={logout}>
         <LogOut size={20} />
-        <span>Déconnexion</span>
+        <span>{t.nav_logout}</span>
       </button>
     </>
   );

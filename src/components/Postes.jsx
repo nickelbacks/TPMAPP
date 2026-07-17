@@ -1,15 +1,18 @@
 import React, { useEffect } from 'react';
 import { machineStatus } from '../db.js';
+import { useLang } from '../i18n.jsx';
 import { Factory } from 'lucide-react';
 
 export default function Postes({ DB, go }) {
+  const { t } = useLang();
+
   useEffect(() => {
-    document.getElementById('page-title').textContent = 'Postes de travail';
-  }, []);
+    document.getElementById('page-title').textContent = t.postes_title;
+  }, [t]);
 
   return (
     <div className="tiles-grid">
-      {DB.postes.length === 0 && <div className="empty">Aucun poste. Créez-en un dans les paramètres.</div>}
+      {DB.postes.length === 0 && <div className="empty">{t.postes_empty}</div>}
       {DB.postes.map(p => {
         const ms = DB.machines.filter(m => m.posteId === p.id);
         const done = ms.filter(m => machineStatus(DB, m) === 'done').length;
@@ -22,13 +25,13 @@ export default function Postes({ DB, go }) {
             </div>
             <h4>{p.name}</h4>
             <div className="tile-sub">
-              {ms.length} machine{ms.length > 1 ? 's' : ''}
-              {late > 0 && <> — <span className="text-red">{late} en retard</span></>}
+              {ms.length}{ms.length > 1 ? t.postes_machines : t.postes_machine}
+              {late > 0 && <> — <span className="text-red">{late}{t.postes_en_retard}</span></>}
             </div>
             <div className="progress-bar"><div className="progress-fill" style={{ width: pct + '%' }} /></div>
             <div className="tile-footer">
-              <span>TPM du jour</span>
-              <span>{done}/{ms.length} faites</span>
+              <span>{t.postes_tpm_day}</span>
+              <span>{done}/{ms.length}{t.postes_done}</span>
             </div>
           </div>
         );

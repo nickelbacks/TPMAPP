@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { nextId, saveDB } from '../db.js';
+import { useLang } from '../i18n.jsx';
 import { Camera } from 'lucide-react';
 
 function resizeImage(file) {
@@ -22,6 +23,7 @@ function resizeImage(file) {
 }
 
 export default function TpmChecklist({ machine, currentUser, DB, persist, trk, go, onClose }) {
+  const { t, lang } = useLang();
   const [answers, setAnswers] = useState({});
   const [comment, setComment] = useState('');
   const [error, setError] = useState(false);
@@ -41,7 +43,7 @@ export default function TpmChecklist({ machine, currentUser, DB, persist, trk, g
   };
 
   const submit = () => {
-    const missing = machine.checklist.some(t => !answers[t.id] || !answers[t.id].status);
+    const missing = machine.checklist.some(tsk => !answers[tsk.id] || !answers[tsk.id].status);
     if (missing) { setError(true); return; }
 
     const newDB = { ...DB };
@@ -50,11 +52,11 @@ export default function TpmChecklist({ machine, currentUser, DB, persist, trk, g
       machineId: machine.id,
       userId: currentUser.id,
       date: Date.now(),
-      results: machine.checklist.map(t => ({
-        taskId: t.id,
-        status: answers[t.id].status,
-        comment: answers[t.id].comment || '',
-        photo: answers[t.id].photo || null,
+      results: machine.checklist.map(tsk => ({
+        taskId: tsk.id,
+        status: answers[tsk.id].status,
+        comment: answers[tsk.id].comment || '',
+        photo: answers[tsk.id].photo || null,
       })),
       comment: comment.trim(),
     }];
@@ -64,44 +66,44 @@ export default function TpmChecklist({ machine, currentUser, DB, persist, trk, g
     go('machine', machine.id);
   };
 
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today = new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
     <>
       <h3>TPM — {machine.name}</h3>
-      <div className="modal-sub">{today} — par {currentUser.name}</div>
+      <div className="modal-sub">{today}{t.tpm_by}{currentUser.name}</div>
 
-      {machine.checklist.map((t, i) => {
-        const ans = answers[t.id] || {};
+      {machine.checklist.map((tsk, i) => {
+        const ans = answers[tsk.id] || {};
         return (
-          <div key={t.id} className="ck-task">
+          <div key={tsk.id} className="ck-task">
             <div className="ck-head">
-              <div className="ck-label">{i + 1}. {t.label}</div>
+              <div className="ck-label">{i + 1}. {tsk.label}</div>
               <div className="oknok">
                 <button
                   className={ans.status === 'ok' ? 'sel-ok' : ''}
-                  onClick={() => setAns(t.id, 'ok')}
+                  onClick={() => setAns(tsk.id, 'ok')}
                 >OK</button>
                 <button
                   className={ans.status === 'nok' ? 'sel-nok' : ''}
-                  onClick={() => setAns(t.id, 'nok')}
+                  onClick={() => setAns(tsk.id, 'nok')}
                 >NOK</button>
               </div>
             </div>
             {ans.status === 'nok' && (
               <div className="ck-extra">
                 <textarea
-                  placeholder="Décrivez l'anomalie…"
+                  placeholder={t.tpm_anomaly_placeholder}
                   value={ans.comment || ''}
-                  onChange={(e) => setCommentTask(t.id, e.target.value)}
+                  onChange={(e) => setCommentTask(tsk.id, e.target.value)}
                 />
                 <label className="btn btn-ghost photo-btn">
-                  <Camera size={16} /> Ajouter une photo
+                  <Camera size={16} /> {t.tpm_add_photo}
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden-input"
-                    onChange={(e) => { if (e.target.files[0]) setPhoto(t.id, e.target.files[0]); }}
+                    onChange={(e) => { if (e.target.files[0]) setPhoto(tsk.id, e.target.files[0]); }}
                   />
                 </label>
                 {ans.photo && <img src={ans.photo} className="photo-preview" alt="" />}
@@ -111,18 +113,18 @@ export default function TpmChecklist({ machine, currentUser, DB, persist, trk, g
         );
       })}
 
-      <label>Commentaire général (optionnel)</label>
+      <label>{t.tpm_comment_label}</label>
       <textarea
-        placeholder="Remarques…"
+        placeholder={t.tpm_comment_placeholder}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
 
-      {error && <div className="modal-error">Merci de répondre OK ou NOK à toutes les tâches.</div>}
+      {error && <div className="modal-error">{t.tpm_error}</div>}
 
       <div className="modal-foot">
-        <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-        <button className="btn btn-primary" onClick={submit}>Valider la TPM</button>
+        <button className="btn btn-ghost" onClick={onClose}>{t.tpm_cancel}</button>
+        <button className="btn btn-primary" onClick={submit}>{t.tpm_submit}</button>
       </div>
     </>
   );

@@ -505,6 +505,27 @@ label {
 .photo-zoom { max-width: 100%; max-height: 85vh; border-radius: 16px; }
 
 /* ================================================================
+   LOGIN — LANGUAGE SWITCHER & FOOTER
+   ================================================================ */
+.login-top-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;
+}
+.lang-switcher {
+  display: flex; align-items: center; gap: 6px; margin-left: auto;
+}
+.lang-switcher svg { color: var(--muted); }
+.lang-btn {
+  padding: 5px 10px; border-radius: 8px; border: 1.5px solid var(--line);
+  background: var(--white); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all var(--transition); color: var(--muted);
+}
+.lang-btn:hover { border-color: var(--green); color: var(--green-dark); }
+.lang-btn.active { background: var(--green); border-color: var(--green); color: #fff; }
+.login-footer {
+  margin-top: 28px; text-align: center; font-size: 12px; color: var(--muted); font-weight: 500;
+}
+
+/* ================================================================
    EMPTY STATE
    ================================================================ */
 .empty {
